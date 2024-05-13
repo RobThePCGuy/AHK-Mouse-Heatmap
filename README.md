@@ -1,13 +1,19 @@
-
-# Mouse Click Heatmap
+# AHK-Mouse-Heatmap
 
 The "Mouse Click Heatmap" is a tool designed to visualize mouse click data, providing insights into user interaction patterns across a specified interface. This project utilizes both an AutoHotkey script for collecting mouse click data and a Python script to analyze and visualize these data points on a heatmap.
 
+![image](https://github.com/ZeroOneZero/AHK-Mouse-Heatmap/assets/10876982/77c75132-e751-4e19-9312-a2767563a026)
+
+![heatmap](https://github.com/ZeroOneZero/AHK-Mouse-Heatmap/assets/10876982/483dd7ab-f5a8-4594-8bb4-91f4a556faa7)
+
 ## Features
 
-- **Data Collection**: Automate the tracking of mouse clicks including position and button type.
+- **Data Collection**: Automate the tracking of mouse clicks, including position and button type.
 - **Data Analysis**: Use clustering to identify frequent areas of clicks.
 - **Heatmap Visualization**: Generate a visual heatmap representation of mouse clicks across the screen.
+- **Tray Menu**: Access the GUI, generate a heatmap, or exit the script.
+- **GUI**: Shows an updated count from previous sessions updated on the fly of total clicks (left, right, and middle).
+  - For convenience, you can also generate a heatmap from the GUI via the dedicated button.
 
 ## Prerequisites
 
@@ -46,8 +52,4 @@ After collecting enough data, run the Python script to generate the heatmap:
 python generate_heatmap.py
 ```
 
-The heatmap image will be saved in the project directory.
-<!--stackedit_data:
-eyJoaXN0b3J5IjpbMTE5NjUzOTI0OSwxOTIwODQwNjEyLDEzOD
-g0Mjk5OTBdfQ==
--->
+The **heatmap.png** image will be saved in the project directory.
