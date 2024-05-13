@@ -33,7 +33,7 @@ pip install -r requirements.txt
 
 ## Usage
 
-To start collecting data, run the AutoHotkey script:
+To start collecting data, double-click or use the following snippet to run the AutoHotkey script:
 
 ```bash
 # Make sure AutoHotkey is installed
@@ -48,6 +48,6 @@ python generate_heatmap.py
 
 The heatmap image will be saved in the project directory.
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTU4MTU2ODE2NSwxOTIwODQwNjEyLDEzOD
+eyJoaXN0b3J5IjpbMTE5NjUzOTI0OSwxOTIwODQwNjEyLDEzOD
 g0Mjk5OTBdfQ==
 -->
