@@ -18,18 +18,21 @@ The "Mouse Click Heatmap" is a tool designed to visualize mouse click data, prov
 ## Prerequisites
 
 Before you begin, ensure you have met the following requirements:
-- AutoHotkey installed for running AHK scripts.
-- Python 3.8 or higher.
+- [AutoHotkey](https://www.autohotkey.com/) installed for running AHK scripts.
+- [Python](https://www.python.org/downloads/) 3.8 or higher.
 - Libraries: pandas, PIL, sklearn (Install using `pip install pandas Pillow scikit-learn`)
 
 ## Installation
 
-Clone the repo to your local machine:
+Download the zip file via the green button above, or clone the repo to your local machine:
 
 ```bash
 git clone https://github.com/ZeroOneZero/AHK-Mouse-Heatmap.git
 cd AHK-Mouse-Heatmap
 ```
+
+> [!IMPORTANT]
+> To use the `git clone` on Windows, requries [git for windows](https://git-scm.com/download/win).
 
 Install the required Python libraries:
 
@@ -43,7 +46,7 @@ To start collecting data, double-click or use the following snippet to run the A
 
 ```bash
 # Make sure AutoHotkey is installed
-AutoHotkey heatmap.ahk
+heatmap.ahk
 ```
 
 After collecting enough data, run the Python script to generate the heatmap:
