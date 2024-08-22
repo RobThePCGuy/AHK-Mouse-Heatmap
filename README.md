@@ -12,7 +12,7 @@ An AutoHotkey script that records and visualizes left, right, and middle mouse c
 - **Smart Analysis**: Pinpoints hotspots by clustering frequent click areas.
 - **Visual Heatmap**: See where you click most with a colorful heatmap.
 - **Handy Tray Menu**: Quickly access the GUI, create a heatmap, or close the script.
-- **Live Click Count**: The GUI keeps a live tally of all your clicks, updated on the fly. Plus, you can generate a heatmap right from the tray menu for quick insights.
+- **Live Click Count**: The GUI keeps a live tally of all your clicks, updated on the fly. Plus, you can generate a heatmap right from the GUI or tray menu for quicker insights.
 
 ## Prerequisites
 
