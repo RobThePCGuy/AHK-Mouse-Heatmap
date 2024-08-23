@@ -1,4 +1,5 @@
 #Persistent
+Menu, Tray, Icon, AHK-Mouse-Heatmap.ico
 SetWorkingDir %A_ScriptDir%
 
 ; Define variables
