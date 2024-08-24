@@ -1,6 +1,6 @@
 #Persistent
-Menu, Tray, Icon, AHK-Mouse-Heatmap.ico
 SetWorkingDir %A_ScriptDir%
+Menu, Tray, Icon, AHK-Mouse-Heatmap.ico
 
 ; Define variables
 logFile := "ClickLog.txt"
@@ -23,6 +23,9 @@ Gui, MyGui:Add, Text, vLeftClicksText, Left Clicks: %leftClicks%
 Gui, MyGui:Add, Text, vRightClicksText, Right Clicks: %rightClicks%
 Gui, MyGui:Add, Text, vMiddleClicksText, Middle Clicks: %middleClicks%
 Gui, MyGui:Add, Button, gRunHeatmap, Run Heatmap
+
+; Show the GUI initially
+Gui, MyGui:Show, , Click Tracker
 
 ; Function to update GUI with current click counts
 UpdateGui:
@@ -62,8 +65,8 @@ ReadLogFileAndUpdateCounters() {
 
 ; Function to show GUI window when menu button is clicked
 ShowGui:
-    ReadLogFileAndUpdateCounters()
     Gui, MyGui:Show
+    Gosub, UpdateGui
 return
 
 ; Functions to increment click counts and log clicks to the file
@@ -85,9 +88,10 @@ IncrementAndLogClick(buttonType) {
     else if (buttonType = "Right")
         rightClicks++
     else if (buttonType = "Middle")
-        middleClicks++
+        middleClicks++  ; Ensure this line increments middleClicks
     Gosub, UpdateGui
 }
+
 
 ; Function to run heatmap generation script when menu button is clicked
 RunHeatmap:
