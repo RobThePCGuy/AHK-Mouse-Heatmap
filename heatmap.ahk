@@ -35,7 +35,7 @@ Gui, MyGui:Show, , Click Tracker
 UpdateGui:
     global leftClicks, rightClicks, middleClicks
     GuiControl, MyGui:, LeftClicksText, Left Clicks: %leftClicks%
-    GuiControl, MyGui:, Right ClicksText, Right Clicks: %rightClicks%
+    GuiControl, MyGui:, RightClicksText, Right Clicks: %rightClicks%
     GuiControl, MyGui:, MiddleClicksText, Middle Clicks: %middleClicks%
 return
 
