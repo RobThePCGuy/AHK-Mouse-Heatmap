@@ -60,8 +60,18 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
           New-Item -ItemType Directory -Force dist | Out-Null
-          & "${{ steps.ahk2exe.outputs.path }}" /in heatmap.ahk /out dist\AHK-Mouse-Heatmap.exe /icon AHK-Mouse-Heatmap.ico
-          if (-not (Test-Path "dist\AHK-Mouse-Heatmap.exe")) {
+          $ahk2exe = "${{ steps.ahk2exe.outputs.path }}"
+          $inputPath = (Resolve-Path "heatmap.ahk").Path
+          $outputPath = Join-Path (Resolve-Path "dist").Path "AHK-Mouse-Heatmap.exe"
+          $iconPath = (Resolve-Path "AHK-Mouse-Heatmap.ico").Path
+          $compilerDir = Split-Path $ahk2exe -Parent
+          $arguments = @("/in", $inputPath, "/out", $outputPath, "/icon", $iconPath)
+          $process = Start-Process -FilePath $ahk2exe -ArgumentList $arguments -WorkingDirectory $compilerDir -Wait -PassThru
+          if ($process.ExitCode -ne 0) {
+            throw "Ahk2Exe exited with code $($process.ExitCode)."
+          }
+          if (-not (Test-Path $outputPath)) {
+            Get-ChildItem -Recurse dist,build\AutoHotkey | Select-Object FullName
             throw "AHK-Mouse-Heatmap.exe was not created."
           }
 
