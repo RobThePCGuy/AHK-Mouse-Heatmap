@@ -40,7 +40,7 @@ jobs:
           $ErrorActionPreference = "Stop"
           New-Item -ItemType Directory -Force build | Out-Null
           $zipPath = "build\AutoHotkey_1.1.37.02.zip"
-          Invoke-WebRequest "https://www.autohotkey.com/download/1.1/AutoHotkey_1.1.37.02.zip" -OutFile $zipPath
+          Invoke-WebRequest "https://github.com/AutoHotkey/AutoHotkey/releases/download/v1.1.37.02/AutoHotkey_1.1.37.02.zip" -OutFile $zipPath
           Expand-Archive $zipPath -DestinationPath "build\AutoHotkey" -Force
 
       - name: Locate Ahk2Exe
