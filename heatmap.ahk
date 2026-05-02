@@ -35,7 +35,7 @@ Gui, MyGui:Show, , Click Tracker
 UpdateGui:
     global leftClicks, rightClicks, middleClicks
     GuiControl, MyGui:, LeftClicksText, Left Clicks: %leftClicks%
-    GuiControl, MyGui:, RightClicksText, Right Clicks: %rightClicks%
+    GuiControl, MyGui:, Right ClicksText, Right Clicks: %rightClicks%
     GuiControl, MyGui:, MiddleClicksText, Middle Clicks: %middleClicks%
 return
 
@@ -98,7 +98,10 @@ IncrementAndLogClick(buttonType) {
 
 ; Function to run heatmap generation script when menu button is clicked
 RunHeatmap:
-    Run, python generate_heatmap.py
+    if FileExist("generate_heatmap.exe")
+        Run, generate_heatmap.exe
+    else
+        Run, python generate_heatmap.py
 return
 
 ; Function to exit the script when menu button is clicked
