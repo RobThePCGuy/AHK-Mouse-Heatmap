@@ -1,58 +1,94 @@
-import pandas as pd
-from PIL import Image, ImageDraw, ImageFilter
-import numpy as np
-from sklearn.cluster import DBSCAN
+import csv
+import math
 import sys
+from collections import Counter
+from pathlib import Path
 
-def read_click_log(filepath):
-    try:
-        return pd.read_csv(filepath)
-    except FileNotFoundError:
-        print("Error: File not found", filepath)
+from PIL import Image, ImageDraw, ImageFilter
+
+LOG_FILE = Path("ClickLog.txt")
+OUTPUT_FILE = Path("heatmap.png")
+PADDING = 100
+MIN_RADIUS = 18
+MAX_RADIUS = 80
+BLUR_RADIUS = 10
+
+COLORS = {
+    "Left": (0, 255, 0),
+    "Right": (255, 0, 0),
+    "Middle": (0, 120, 255),
+}
+
+
+def read_clicks(filepath):
+    if not filepath.exists():
+        print(f"Error: {filepath} was not found. Run heatmap.ahk first to collect clicks.")
         sys.exit(1)
 
-def perform_clustering(data, eps, min_samples):
-    coords = data[['x', 'y']].to_numpy()
-    clustering = DBSCAN(eps=eps, min_samples=min_samples).fit(coords)
-    return clustering.labels_, coords
+    with filepath.open(newline="", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        required_columns = {"date", "time", "click", "x", "y"}
+        if not reader.fieldnames or not required_columns.issubset(reader.fieldnames):
+            print("Error: ClickLog.txt must contain this CSV header: date,time,click,x,y")
+            sys.exit(1)
 
-def create_heatmap(coords, labels, image_size, colors):
-    image = Image.new('RGB', image_size, 'black')
-    draw = ImageDraw.Draw(image)
-    
-    for label in set(labels):
-        if label == -1:  # Ignore noise
-            continue
-        class_member_mask = (labels == label)
-        xy = coords[class_member_mask]
-        if xy.size == 0:  # Check if xy is empty
-            continue
+        clicks = []
+        for row in reader:
+            try:
+                click_type = row["click"]
+                if click_type not in COLORS:
+                    continue
+                clicks.append({
+                    "click": click_type,
+                    "x": int(float(row["x"])),
+                    "y": int(float(row["y"])),
+                })
+            except (TypeError, ValueError):
+                continue
 
-        intensity = max(1, min(255, np.log1p(len(xy)) * 2))  # Using logarithmic scaling
-        radius = min(25, len(xy) * 1)
-        color = choose_color(label, colors)
-        color_with_intensity = adjust_color_intensity(color, intensity)
-        draw_cluster(draw, xy, radius, color_with_intensity)
-    
+    if not clicks:
+        print("Error: No valid clicks found in ClickLog.txt.")
+        sys.exit(1)
+
+    return clicks
+
+
+def determine_canvas(clicks):
+    max_x = max(click["x"] for click in clicks)
+    max_y = max(click["y"] for click in clicks)
+    return max_x + PADDING, max_y + PADDING
+
+
+def draw_heatmap(clicks):
+    image_size = determine_canvas(clicks)
+    image = Image.new("RGB", image_size, "black")
+    overlay = Image.new("RGBA", image_size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay, "RGBA")
+
+    click_counts = Counter((click["click"], click["x"], click["y"]) for click in clicks)
+    max_count = max(click_counts.values())
+
+    for (click_type, x, y), count in click_counts.items():
+        scale = math.log1p(count) / math.log1p(max_count)
+        radius = int(MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * scale)
+        alpha = int(70 + 185 * scale)
+        red, green, blue = COLORS[click_type]
+        draw.ellipse(
+            [x - radius, y - radius, x + radius, y + radius],
+            fill=(red, green, blue, alpha),
+        )
+
+    overlay = overlay.filter(ImageFilter.GaussianBlur(BLUR_RADIUS))
+    image.paste(overlay, (0, 0), overlay)
     return image
 
-def choose_color(label, colors):
-    return colors['Left'] if label % 3 == 0 else colors['Right'] if label % 3 == 1 else colors['Middle']
 
-def adjust_color_intensity(color, intensity):
-    # Ensures that each component of the color is an integer
-    return tuple(int(min(base + intensity, 255)) for base in color)
+def main():
+    clicks = read_clicks(LOG_FILE)
+    image = draw_heatmap(clicks)
+    image.save(OUTPUT_FILE)
+    print(f"Saved {OUTPUT_FILE} using {len(clicks)} clicks.")
 
-def draw_cluster(draw, points, radius, color):
-    color = tuple(int(c) for c in color)  # Convert color components to integer
-    radius = int(radius)  # Ensure radius is an integer
-    for point in points:
-        x, y = map(int, point)  # Ensure points are used as integers
-        draw.ellipse([x - radius, y - radius, x + radius, y + radius], fill=color)
 
-df = read_click_log("ClickLog.txt")
-labels, coords = perform_clustering(df, 0.1, 1)
-colors = {'Left': (0, 255, 0), 'Right': (255, 0, 0), 'Middle': (0, 0, 255)}
-image = create_heatmap(coords, labels, (4096, 2160), colors)
-image = image.filter(ImageFilter.GaussianBlur(0))  # Blur radius
-image.save("heatmap.png")
+if __name__ == "__main__":
+    main()

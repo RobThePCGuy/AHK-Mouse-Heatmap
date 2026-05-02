@@ -8,6 +8,10 @@ leftClicks := 0
 rightClicks := 0
 middleClicks := 0
 
+; Create a CSV header on first run so Python can parse the log reliably.
+if !FileExist(logFile)
+    FileAppend, date,time,click,x,y`n, %logFile%
+
 ; Read existing log file to update click counts at script start
 ReadLogFileAndUpdateCounters()
 
@@ -88,10 +92,9 @@ IncrementAndLogClick(buttonType) {
     else if (buttonType = "Right")
         rightClicks++
     else if (buttonType = "Middle")
-        middleClicks++  ; Ensure this line increments middleClicks
+        middleClicks++
     Gosub, UpdateGui
 }
-
 
 ; Function to run heatmap generation script when menu button is clicked
 RunHeatmap:

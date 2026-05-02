@@ -1,0 +1,6 @@
+ClickLog.txt
+heatmap.png
+__pycache__/
+*.pyc
+.venv/
+venv/
