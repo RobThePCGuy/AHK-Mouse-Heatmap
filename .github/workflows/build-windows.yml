@@ -43,32 +43,39 @@ jobs:
           Invoke-WebRequest "https://github.com/AutoHotkey/AutoHotkey/releases/download/v1.1.37.02/AutoHotkey_1.1.37.02.zip" -OutFile $zipPath
           Expand-Archive $zipPath -DestinationPath "build\AutoHotkey" -Force
 
-      - name: Locate Ahk2Exe
+      - name: Locate AutoHotkey compiler files
         id: ahk2exe
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $path = Get-ChildItem "build\AutoHotkey" -Recurse -Filter Ahk2Exe.exe | Select-Object -First 1 -ExpandProperty FullName
-          if (-not $path) {
+          $compiler = Get-ChildItem "build\AutoHotkey" -Recurse -Filter Ahk2Exe.exe | Select-Object -First 1 -ExpandProperty FullName
+          $runtime = Get-ChildItem "build\AutoHotkey" -Recurse -Filter AutoHotkeyU64.exe | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $compiler) {
             Get-ChildItem "build\AutoHotkey" -Recurse | Select-Object FullName
-            throw "Ahk2Exe.exe was not found in the AutoHotkey v1 ZIP."
+            throw "Compiler was not found in the AutoHotkey ZIP."
           }
-          "path=$path" >> $env:GITHUB_OUTPUT
+          if (-not $runtime) {
+            Get-ChildItem "build\AutoHotkey" -Recurse | Select-Object FullName
+            throw "Runtime was not found in the AutoHotkey ZIP."
+          }
+          "path=$compiler" >> $env:GITHUB_OUTPUT
+          "runtime=$runtime" >> $env:GITHUB_OUTPUT
 
       - name: Build AutoHotkey app EXE
         shell: pwsh
+        timeout-minutes: 2
         run: |
           $ErrorActionPreference = "Stop"
           New-Item -ItemType Directory -Force dist | Out-Null
           $ahk2exe = "${{ steps.ahk2exe.outputs.path }}"
+          $runtimePath = "${{ steps.ahk2exe.outputs.runtime }}"
           $inputPath = (Resolve-Path "heatmap.ahk").Path
           $outputPath = Join-Path (Resolve-Path "dist").Path "AHK-Mouse-Heatmap.exe"
           $iconPath = (Resolve-Path "AHK-Mouse-Heatmap.ico").Path
-          $compilerDir = Split-Path $ahk2exe -Parent
-          $arguments = @("/in", $inputPath, "/out", $outputPath, "/icon", $iconPath)
-          $process = Start-Process -FilePath $ahk2exe -ArgumentList $arguments -WorkingDirectory $compilerDir -Wait -PassThru
-          if ($process.ExitCode -ne 0) {
-            throw "Ahk2Exe exited with code $($process.ExitCode)."
+          $arguments = @("/in", $inputPath, "/out", $outputPath, "/icon", $iconPath, "/base", $runtimePath, "/mpress", "0")
+          & $ahk2exe @arguments
+          if ($LASTEXITCODE -ne 0) {
+            throw "Ahk2Exe exited with code $LASTEXITCODE."
           }
           if (-not (Test-Path $outputPath)) {
             Get-ChildItem -Recurse dist,build\AutoHotkey | Select-Object FullName
