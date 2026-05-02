@@ -29,7 +29,32 @@ It does not record screenshots, keystrokes, window titles, browser history, file
 
 The click log is written locally to `ClickLog.txt` in the project folder. Delete that file any time to clear your click history. Generated heatmaps are saved locally as `heatmap.png`.
 
-## Requirements
+## Download
+
+For most users, download the latest Windows release ZIP from the GitHub Releases page.
+
+The release ZIP contains:
+
+- `AHK-Mouse-Heatmap.exe`: the click tracker and GUI.
+- `generate_heatmap.exe`: the bundled heatmap generator.
+- `README.md`: usage and privacy notes.
+
+Keep both `.exe` files in the same folder. `AHK-Mouse-Heatmap.exe` calls `generate_heatmap.exe` when you choose `Run Heatmap`.
+
+## Usage from release ZIP
+
+1. Download and unzip `AHK-Mouse-Heatmap-Windows.zip`.
+2. Run `AHK-Mouse-Heatmap.exe`.
+3. Click normally for a while.
+4. Right-click the tray icon and choose `Run Heatmap`, or open the GUI and click `Run Heatmap`.
+5. Open `heatmap.png` from the same folder.
+6. Right-click the tray icon and choose `Exit` to stop logging.
+
+![tray](https://github.com/user-attachments/assets/f1299b25-ef1e-417e-abec-6acafbd16ac2)
+
+## Run from source
+
+If you prefer to run the scripts directly, install:
 
 - Windows
 - [AutoHotkey](https://www.autohotkey.com/)
@@ -38,34 +63,32 @@ The click log is written locally to `ClickLog.txt` in the project folder. Delete
 The Python heatmap generator only requires Pillow:
 
 ```bash
-pip install -r requirements.txt
-```
-
-## Install
-
-Download the repo as a ZIP from GitHub, or clone it:
-
-```bash
 git clone https://github.com/RobThePCGuy/AHK-Mouse-Heatmap.git
 cd AHK-Mouse-Heatmap
 pip install -r requirements.txt
 ```
 
+Then run `heatmap.ahk`.
+
 On Windows, cloning requires [Git for Windows](https://git-scm.com/download/win) or [GitHub Desktop](https://desktop.github.com/download/). Downloading the ZIP does not require Git.
 
-## Usage
+## Build a Windows release ZIP
 
-1. Run `heatmap.ahk`.
-2. Click normally for a while.
-3. Right-click the tray icon and choose `Run Heatmap`, or open the GUI and click `Run Heatmap`.
-4. Open `heatmap.png` from the project folder.
-5. Right-click the tray icon and choose `Exit` to stop logging.
+This repo includes a GitHub Actions workflow that builds `AHK-Mouse-Heatmap-Windows.zip`.
 
-![tray](https://github.com/user-attachments/assets/f1299b25-ef1e-417e-abec-6acafbd16ac2)
+To build manually:
+
+1. Open the repo on GitHub.
+2. Go to `Actions`.
+3. Select `Build Windows Release`.
+4. Click `Run workflow`.
+5. Download the `AHK-Mouse-Heatmap-Windows` artifact from the completed workflow run.
+
+To attach the ZIP to a GitHub Release, create and push a tag that starts with `v`, such as `v0.1.0`. The workflow will build the ZIP and attach it to the release automatically.
 
 ## Output files
 
-`ClickLog.txt` is created automatically when you run the AHK script. It is ignored by Git because it contains local activity data.
+`ClickLog.txt` is created automatically when you run the tracker. It is ignored by Git because it contains local activity data.
 
 `heatmap.png` is created when you run the heatmap generator. It is also ignored by Git because it is generated output.
 

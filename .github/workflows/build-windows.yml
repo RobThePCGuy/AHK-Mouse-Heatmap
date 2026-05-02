@@ -1,0 +1,81 @@
+name: Build Windows Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Build heatmap generator EXE
+        run: |
+          pyinstaller --onefile --name generate_heatmap generate_heatmap.py
+
+      - name: Install AutoHotkey
+        run: |
+          choco install autohotkey.portable --version=1.1.37.02 -y --no-progress
+
+      - name: Locate Ahk2Exe
+        id: ahk2exe
+        shell: pwsh
+        run: |
+          $candidates = @(
+            "C:\ProgramData\chocolatey\lib\autohotkey.portable\tools\Compiler\Ahk2Exe.exe",
+            "C:\ProgramData\chocolatey\bin\Ahk2Exe.exe"
+          )
+          $path = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $path) {
+            $path = Get-ChildItem "C:\ProgramData\chocolatey" -Recurse -Filter Ahk2Exe.exe | Select-Object -First 1 -ExpandProperty FullName
+          }
+          if (-not $path) {
+            throw "Ahk2Exe.exe was not found after installing AutoHotkey."
+          }
+          "path=$path" >> $env:GITHUB_OUTPUT
+
+      - name: Build AutoHotkey app EXE
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          & "${{ steps.ahk2exe.outputs.path }}" /in heatmap.ahk /out dist\AHK-Mouse-Heatmap.exe /icon AHK-Mouse-Heatmap.ico
+
+      - name: Assemble release package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force package | Out-Null
+          Copy-Item dist\AHK-Mouse-Heatmap.exe package\AHK-Mouse-Heatmap.exe
+          Copy-Item dist\generate_heatmap.exe package\generate_heatmap.exe
+          Copy-Item README.md package\README.md
+          Copy-Item LICENSE* package\ -ErrorAction SilentlyContinue
+          Compress-Archive -Path package\* -DestinationPath AHK-Mouse-Heatmap-Windows.zip -Force
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AHK-Mouse-Heatmap-Windows
+          path: AHK-Mouse-Heatmap-Windows.zip
+
+      - name: Attach ZIP to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: AHK-Mouse-Heatmap-Windows.zip
