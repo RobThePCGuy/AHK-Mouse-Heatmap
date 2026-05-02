@@ -1,4 +1,1 @@
-pandas
 Pillow
-numpy
-scikit-learn
