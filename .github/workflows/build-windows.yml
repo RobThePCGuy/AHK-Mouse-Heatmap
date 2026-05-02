@@ -9,6 +9,9 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: windows-latest
@@ -31,36 +34,41 @@ jobs:
         run: |
           pyinstaller --onefile --name generate_heatmap generate_heatmap.py
 
-      - name: Install AutoHotkey
+      - name: Download AutoHotkey v1 compiler
+        shell: pwsh
         run: |
-          choco install autohotkey.portable --version=1.1.37.02 -y --no-progress
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Force build | Out-Null
+          $zipPath = "build\AutoHotkey_1.1.37.02.zip"
+          Invoke-WebRequest "https://www.autohotkey.com/download/1.1/AutoHotkey_1.1.37.02.zip" -OutFile $zipPath
+          Expand-Archive $zipPath -DestinationPath "build\AutoHotkey" -Force
 
       - name: Locate Ahk2Exe
         id: ahk2exe
         shell: pwsh
         run: |
-          $candidates = @(
-            "C:\ProgramData\chocolatey\lib\autohotkey.portable\tools\Compiler\Ahk2Exe.exe",
-            "C:\ProgramData\chocolatey\bin\Ahk2Exe.exe"
-          )
-          $path = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          $ErrorActionPreference = "Stop"
+          $path = Get-ChildItem "build\AutoHotkey" -Recurse -Filter Ahk2Exe.exe | Select-Object -First 1 -ExpandProperty FullName
           if (-not $path) {
-            $path = Get-ChildItem "C:\ProgramData\chocolatey" -Recurse -Filter Ahk2Exe.exe | Select-Object -First 1 -ExpandProperty FullName
-          }
-          if (-not $path) {
-            throw "Ahk2Exe.exe was not found after installing AutoHotkey."
+            Get-ChildItem "build\AutoHotkey" -Recurse | Select-Object FullName
+            throw "Ahk2Exe.exe was not found in the AutoHotkey v1 ZIP."
           }
           "path=$path" >> $env:GITHUB_OUTPUT
 
       - name: Build AutoHotkey app EXE
         shell: pwsh
         run: |
+          $ErrorActionPreference = "Stop"
           New-Item -ItemType Directory -Force dist | Out-Null
           & "${{ steps.ahk2exe.outputs.path }}" /in heatmap.ahk /out dist\AHK-Mouse-Heatmap.exe /icon AHK-Mouse-Heatmap.ico
+          if (-not (Test-Path "dist\AHK-Mouse-Heatmap.exe")) {
+            throw "AHK-Mouse-Heatmap.exe was not created."
+          }
 
       - name: Assemble release package
         shell: pwsh
         run: |
+          $ErrorActionPreference = "Stop"
           New-Item -ItemType Directory -Force package | Out-Null
           Copy-Item dist\AHK-Mouse-Heatmap.exe package\AHK-Mouse-Heatmap.exe
           Copy-Item dist\generate_heatmap.exe package\generate_heatmap.exe
