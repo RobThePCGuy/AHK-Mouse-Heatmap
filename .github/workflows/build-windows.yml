@@ -63,7 +63,7 @@ jobs:
 
       - name: Build AutoHotkey app EXE
         shell: pwsh
-        timeout-minutes: 2
+        timeout-minutes: 3
         run: |
           $ErrorActionPreference = "Stop"
           New-Item -ItemType Directory -Force dist | Out-Null
@@ -74,11 +74,14 @@ jobs:
           $iconPath = (Resolve-Path "AHK-Mouse-Heatmap.ico").Path
           $arguments = @("/in", $inputPath, "/out", $outputPath, "/icon", $iconPath, "/base", $runtimePath, "/mpress", "0")
           & $ahk2exe @arguments
+
+          $deadline = (Get-Date).AddSeconds(45)
+          while ((Get-Date) -lt $deadline -and -not (Test-Path $outputPath)) {
+            Start-Sleep -Seconds 1
+          }
+
           if (-not (Test-Path $outputPath)) {
             Get-ChildItem -Recurse dist,build\AutoHotkey | Select-Object FullName
-            if ($LASTEXITCODE -is [int] -and $LASTEXITCODE -ne 0) {
-              throw "Ahk2Exe exited with code $LASTEXITCODE."
-            }
             throw "AHK-Mouse-Heatmap.exe was not created."
           }
 
