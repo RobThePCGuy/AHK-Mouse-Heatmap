@@ -6,6 +6,7 @@ appName := "AHK Mouse Heatmap"
 appDir := A_ScriptDir
 iconFile := appDir . "\AHK-Mouse-Heatmap.ico"
 logFile := appDir . "\ClickLog.txt"
+heatmapFile := appDir . "\heatmap.png"
 heatmapExe := appDir . "\generate_heatmap.exe"
 heatmapScript := appDir . "\generate_heatmap.py"
 
@@ -114,25 +115,34 @@ IncrementAndLogClick(buttonType) {
 
 ; Function to run heatmap generation script when menu button is clicked.
 RunHeatmap:
-    global appDir, heatmapExe, heatmapScript, logFile
+    global appDir, heatmapExe, heatmapScript, heatmapFile, logFile
 
     if !FileExist(logFile) {
         MsgBox, 48, AHK Mouse Heatmap, ClickLog.txt does not exist yet. Click a few times, then generate the heatmap again.
         return
     }
 
+    if FileExist(heatmapFile)
+        FileDelete, %heatmapFile%
+
     if FileExist(heatmapExe) {
         RunWait, "%heatmapExe%", %appDir%
+        generatorExitCode := ErrorLevel
     } else if FileExist(heatmapScript) {
         RunWait, python "%heatmapScript%", %appDir%
+        generatorExitCode := ErrorLevel
     } else {
         MsgBox, 16, AHK Mouse Heatmap, Could not find generate_heatmap.exe or generate_heatmap.py in:`n%appDir%
         return
     }
 
-    if FileExist(appDir . "\heatmap.png") {
+    if (generatorExitCode = "ERROR") {
+        MsgBox, 48, AHK Mouse Heatmap, Failed to launch the heatmap generator. If running from source, make sure Python is installed and available in PATH.
+    } else if FileExist(heatmapFile) {
         GuiControl, MyGui:, StatusText, Saved heatmap.png beside this app.
-        MsgBox, 64, AHK Mouse Heatmap, Heatmap saved to:`n%appDir%\heatmap.png
+        MsgBox, 64, AHK Mouse Heatmap, Heatmap saved to:`n%heatmapFile%
+    } else if (generatorExitCode != 0) {
+        MsgBox, 48, AHK Mouse Heatmap, The heatmap generator failed with exit code %generatorExitCode%.
     } else {
         MsgBox, 48, AHK Mouse Heatmap, The heatmap generator finished, but heatmap.png was not found.
     }
