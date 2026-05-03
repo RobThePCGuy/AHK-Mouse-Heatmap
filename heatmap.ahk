@@ -1,6 +1,7 @@
 #Persistent
 SetWorkingDir %A_ScriptDir%
-Menu, Tray, Icon, AHK-Mouse-Heatmap.ico
+if FileExist("AHK-Mouse-Heatmap.ico")
+    Menu, Tray, Icon, AHK-Mouse-Heatmap.ico
 
 ; Define variables
 logFile := "ClickLog.txt"
