@@ -8,6 +8,7 @@ from PIL import Image, ImageDraw, ImageFilter
 
 LOG_FILE = Path("ClickLog.txt")
 OUTPUT_FILE = Path("heatmap.png")
+ERROR_FILE = Path("heatmap_error.txt")
 PADDING = 100
 MIN_RADIUS = 18
 MAX_RADIUS = 80
@@ -20,23 +21,29 @@ COLORS = {
 }
 
 
+def fail(message):
+    ERROR_FILE.write_text(message, encoding="utf-8")
+    print(f"Error: {message}")
+    sys.exit(1)
+
+
 def read_clicks(filepath):
     if not filepath.exists():
-        print(f"Error: {filepath} was not found. Run heatmap.ahk first to collect clicks.")
-        sys.exit(1)
+        fail("ClickLog.txt was not found. Click a few times, then generate the heatmap again.")
 
     with filepath.open(newline="", encoding="utf-8") as file:
         reader = csv.DictReader(file)
         required_columns = {"date", "time", "click", "x", "y"}
         if not reader.fieldnames or not required_columns.issubset(reader.fieldnames):
-            print("Error: ClickLog.txt must contain this CSV header: date,time,click,x,y")
-            sys.exit(1)
+            fail("ClickLog.txt must contain this CSV header: date,time,click,x,y")
 
         clicks = []
+        invalid_rows = 0
         for row in reader:
             try:
                 click_type = row["click"]
                 if click_type not in COLORS:
+                    invalid_rows += 1
                     continue
                 clicks.append({
                     "click": click_type,
@@ -44,11 +51,12 @@ def read_clicks(filepath):
                     "y": int(float(row["y"])),
                 })
             except (TypeError, ValueError):
-                continue
+                invalid_rows += 1
 
     if not clicks:
-        print("Error: No valid clicks found in ClickLog.txt.")
-        sys.exit(1)
+        if invalid_rows:
+            fail("ClickLog.txt exists, but it does not contain valid click rows.")
+        fail("No clicks have been logged yet. Click a few times, then generate the heatmap again.")
 
     return clicks
 
@@ -84,6 +92,9 @@ def draw_heatmap(clicks):
 
 
 def main():
+    if ERROR_FILE.exists():
+        ERROR_FILE.unlink()
+
     clicks = read_clicks(LOG_FILE)
     image = draw_heatmap(clicks)
     image.save(OUTPUT_FILE)
