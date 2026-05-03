@@ -74,11 +74,11 @@ jobs:
           $iconPath = (Resolve-Path "AHK-Mouse-Heatmap.ico").Path
           $arguments = @("/in", $inputPath, "/out", $outputPath, "/icon", $iconPath, "/base", $runtimePath, "/mpress", "0")
           & $ahk2exe @arguments
-          if ($LASTEXITCODE -ne 0) {
-            throw "Ahk2Exe exited with code $LASTEXITCODE."
-          }
           if (-not (Test-Path $outputPath)) {
             Get-ChildItem -Recurse dist,build\AutoHotkey | Select-Object FullName
+            if ($LASTEXITCODE -is [int] -and $LASTEXITCODE -ne 0) {
+              throw "Ahk2Exe exited with code $LASTEXITCODE."
+            }
             throw "AHK-Mouse-Heatmap.exe was not created."
           }
 
